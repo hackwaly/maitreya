@@ -16,7 +16,7 @@ let lr0Grammar = defineGrammar(() => {
 //console.log(startState);
 
 let parser = new LR0Parser(lr0Grammar);
-parser.feed('((()))');
+parser.feed('ab');
 console.log(parser);
 
 let glrGrammar = defineGrammar(() => {
