@@ -27,8 +27,9 @@ console.log(parser.results);
 
 ## Todos
 
-- [x] Interpret mode
-- [ ] Code generation frontend
-- [ ] Code generation backends
-- [ ] Complete the test cases
-- [ ] Performance benchmark and optimisation
+- [x] Interpret mode.
+- [ ] Code generation frontend.
+- [ ] Code generation backends.
+- [ ] Complete the test cases.
+- [ ] API documentation and website.
+- [ ] Performance benchmark and optimisation.
