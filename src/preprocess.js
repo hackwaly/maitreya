@@ -25,7 +25,7 @@ export default function preprocess(grammar) {
         }
         let state = new State(nextStateId++);
         state.pathSet = pathSet;
-        pathSetToStateMap[pathSet] = state;
+        pathSetToStateMap.set(pathSet, state);
         return state;
     }
 

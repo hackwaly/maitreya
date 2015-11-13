@@ -101,6 +101,6 @@ export class State {
         this.reduceSet = Set();
     }
     toString() {
-        return `State(${this.id}) ${this.pathSet.toString()}`;
+        return `State(${this.id}) ${this.pathSet.toString().slice(4)}`;
     }
 }
