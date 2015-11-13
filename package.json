@@ -2,6 +2,7 @@
   "private": true,
   "jspm": {
     "dependencies": {
+      "chai": "npm:chai@^3.4.1",
       "immutable": "npm:immutable@^3.7.5",
       "mocha": "npm:mocha@^2.3.3"
     },

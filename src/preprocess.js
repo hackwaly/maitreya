@@ -1,4 +1,4 @@
-import {Ref, START, Path, State} from './types';
+import {Nonterminal, START, Path, State} from './types';
 import {Map, Set, Record} from 'immutable';
 
 export default function preprocess(grammar) {
@@ -11,7 +11,7 @@ export default function preprocess(grammar) {
             return pathSet;
         }
         let symbol = path.currentSymbol;
-        if (symbol instanceof Ref) {
+        if (symbol instanceof Nonterminal) {
             for (let production of grammar[symbol.id]) {
                 pathSet = pathSet.union(expand(new Path(production, 0)));
             }

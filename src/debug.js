@@ -2,7 +2,7 @@ import {
     defineGrammar,
     def,
     ref,
-} from '../src/types';
+} from '../src/grammar';
 import preprocess from '../src/preprocess';
 import {LR0Parser, GLRParser} from '../src/interpret';
 

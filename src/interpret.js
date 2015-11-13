@@ -1,9 +1,25 @@
-import {START, Ref} from './types';
+import {START, Nonterminal} from './types';
 import preprocess from './preprocess';
 import {Map, Set, Record, Stack} from 'immutable';
 
-export class LR0Parser {
-    constructor(grammar) {
+class ParserBase {
+    constructor(grammar, tokenToSymbol = null) {
+        this.grammar = grammar;
+        this.tokenToSymbol = tokenToSymbol;
+    }
+    next(symbol) {}
+    feed(input) {
+        for (let token of input) {
+            let symbol = this.tokenToSymbol !== null ?
+                (this.tokenToSymbol)(token) : token;
+            this.next(symbol);
+        }
+    }
+}
+
+export class LR0Parser extends ParserBase {
+    constructor(grammar, tokenToSymbol) {
+        super(grammar, tokenToSymbol);
         this.grammar = grammar;
         let startState = preprocess(grammar);
         this.stack = [startState];
@@ -21,30 +37,26 @@ export class LR0Parser {
                 data = action(data);
             }
             this.stack.length -= symbols.length;
-            this.next(new Ref(production.id), data);
+            this.next(new Nonterminal(production.id), data);
         }
     }
-    next(input, data) {
+    next(symbol, data) {
         let state = this.stack[this.stack.length - 1];
-        this.result.push(input instanceof Ref ? data : input);
-        if (input instanceof Ref && input.id === START) {
+        this.result.push(symbol instanceof Nonterminal ? data : symbol);
+        if (symbol instanceof Nonterminal && symbol.id === START) {
             return;
         }
-        let nextState = state.shiftMap.get(input);
+        let nextState = state.shiftMap.get(symbol);
         this.stack.push(nextState);
         this.reduce();
-    }
-    feed(stream) {
-        for (let input of stream) {
-            this.next(input);
-        }
     }
 }
 
 const StateAndReduce = Record({state: null, reduce: null});
 
-export class GLRParser {
-    constructor(grammar) {
+export class GLRParser extends ParserBase {
+    constructor(grammar, tokenToSymbol) {
+        super(grammar, tokenToSymbol);
         this.grammar = grammar;
         let startState = preprocess(grammar);
         this.stackToResultMap = Map([[Stack([startState]), []]]);
@@ -70,7 +82,7 @@ export class GLRParser {
                     data = action(data);
                 }
                 let newStack = stack.skip(symbols.length);
-                let nexted = this.stackNext(newStack, newResult, new Ref(production.id), data);
+                let nexted = this.stackNext(newStack, newResult, new Nonterminal(production.id), data);
                 if (nexted !== null) {
                     newStackToResultMap.set(nexted.stack, nexted.result);
                     stackReduce(nexted.stack, nexted.result);
@@ -84,41 +96,36 @@ export class GLRParser {
         }
         this.stackToResultMap = newStackToResultMap;
     }
-    stackNext(stack, result, input, data) {
+    stackNext(stack, result, symbol, data) {
         let state = stack.first();
         let newResult = result.slice(0);
-        if (input instanceof Ref && input.id === START) {
+        if (symbol instanceof Nonterminal && symbol.id === START) {
             this.results.push(data[0]);
             return null;
         }
-        newResult.push(input instanceof Ref ? data : input);
-        if (!state.shiftMap.has(input)) {
+        newResult.push(symbol instanceof Nonterminal ? data : symbol);
+        if (!state.shiftMap.has(symbol)) {
             return null;
         }
-        let newState = state.shiftMap.get(input);
+        let newState = state.shiftMap.get(symbol);
         let newStack = stack.unshift(newState);
         return {
             stack: newStack,
             result: newResult
         };
     }
-    next(input) {
+    next(symbol) {
+        this.results = [];
         let stackToResultMap = this.stackToResultMap;
         let newStackToResultMap = Map().asMutable();
         for (let stack of stackToResultMap.keys()) {
             let result = stackToResultMap.get(stack);
-            let nexted = this.stackNext(stack, result, input);
+            let nexted = this.stackNext(stack, result, symbol);
             if (nexted !== null) {
                 newStackToResultMap.set(nexted.stack, nexted.result);
             }
         }
         this.stackToResultMap = newStackToResultMap;
         this.reduce();
-    }
-    feed(stream) {
-        for (let input of stream) {
-            this.results = [];
-            this.next(input);
-        }
     }
 }
