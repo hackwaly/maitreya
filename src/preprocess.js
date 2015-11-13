@@ -15,12 +15,26 @@ class Path extends Record({production: null, cursor: null}) {
 }
 
 export default function preprocess(grammar) {
-    let startState = Set([new Path(grammar[START][0], 0)]);
+    function expand(path) {
+        let pathSet = Set([path]);
+        if (path.atEnd) {
+            return pathSet;
+        }
+        let symbol = path.currentSymbol;
+        if (symbol instanceof Ref) {
+            for (let production of grammar[symbol.id]) {
+                pathSet = pathSet.union(expand(new Path(production, 0)));
+            }
+        }
+        return pathSet;
+    }
+
+    let startPath = new Path(grammar[START][0], 0);
+    let startState = expand(startPath);
+    let stack = [startState];
 
     let shiftTable = Map().asMutable();
     let reduceTable = Map().asMutable();
-
-    let stack = [startState];
 
     function walk(state) {
         let symbolToNextStateMap = Map().asMutable();
@@ -35,7 +49,8 @@ export default function preprocess(grammar) {
                 if (symbolToNextStateMap.has(symbol)) {
                     nextPathSet = symbolToNextStateMap.get(symbol);
                 }
-                nextPathSet = nextPathSet.add(new Path(path.production, path.cursor + 1));
+                let nextPath = new Path(path.production, path.cursor + 1);
+                nextPathSet = nextPathSet.union(expand(nextPath));
                 symbolToNextStateMap.set(symbol, nextPathSet);
             }
         }
@@ -53,7 +68,7 @@ export default function preprocess(grammar) {
     }
 
     return {
-        startState,
+        startPath,
         shiftTable: shiftTable.asImmutable(),
         reduceTable: reduceTable.asImmutable()
     };
