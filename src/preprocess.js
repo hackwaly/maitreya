@@ -29,9 +29,7 @@ export default function preprocess(grammar) {
         return state;
     }
 
-    let startProduction = grammar[START][0];
-    let startSymbol = startProduction.symbols[0];
-    let startPath = new Path(startProduction, 0);
+    let startPath = new Path(grammar[START][0], 0);
     let startState = pathSetToState(expand(startPath));
     let stack = [startState];
 
