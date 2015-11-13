@@ -12,12 +12,8 @@
 <script>
     mocha.setup('bdd');
     mocha.checkLeaks();
-    var expect;
-    System.import('chai').then(function (chai) {
-        expect = chai.expect;
-        System.import('./test/all.js').then(function () {
-            mocha.run();
-        });
+    System.import('./test/all.js').then(function () {
+        mocha.run();
     });
 </script>
 </body>

@@ -3,12 +3,14 @@ import {
     def,
     ref,
     many,
-    many1
+    many1,
+    sepBy
 } from '../src/grammar';
 import {
     LR0Parser,
     GLRParser
 } from '../src/interpret';
+import {expect} from 'chai';
 
 describe('interpret_test', () => {
     let simpleGrammar = defineGrammar(() => {
@@ -18,6 +20,9 @@ describe('interpret_test', () => {
     });
     let manyGrammar = defineGrammar(() => {
         def('S', [many('a')]);
+    });
+    let sepByGrammar = defineGrammar(() => {
+        def('S', [sepBy('a', ',')]);
     });
     let directLeftRecursiveGrammar = defineGrammar(() => {
         def('S', [ref('S'), 'a']);
@@ -36,7 +41,10 @@ describe('interpret_test', () => {
             expect(parse(simpleGrammar, 'ab')).to.deep.equal([[['a'], ['b']]]);
         });
         it('many', () => {
-            expect(parse(manyGrammar, 'aaa')).to.deep.equal([['a', 'a', 'a']]);
+            expect(parse(manyGrammar, 'aaa')).to.deep.equal([[['a', 'a', 'a']]]);
+        });
+        it('sepBy', () => {
+            expect(parse(sepByGrammar, 'a,a,a')).to.deep.equal([[['a', 'a', 'a']]]);
         });
         it('direct left recursive', () => {
             expect(parse(directLeftRecursiveGrammar, 'baa')).to.deep.equal([[[['b'], 'a'], 'a']]);

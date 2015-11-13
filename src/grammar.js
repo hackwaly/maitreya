@@ -2,7 +2,7 @@ import {START, Grammar, Nonterminal, Production} from './types';
 
 let currentGrammar = null;
 
-export function def(id, symbols, action) {
+export function def(id, symbols, action, isGenerated = false) {
     let productions = currentGrammar.productions[id];
     if (productions === undefined) {
         productions = [];
@@ -10,7 +10,7 @@ export function def(id, symbols, action) {
         currentGrammar.allIds.push(id);
     }
     productions.push(new Production(id, symbols, action));
-    if (currentGrammar.startId === null) {
+    if (!isGenerated && currentGrammar.startId === null) {
         currentGrammar.startId = id;
     }
 }
@@ -25,40 +25,40 @@ export function ref(id) {
 
 export function bind(symbols, action) {
     let anonymous = Symbol();
-    def(anonymous, symbols, (es) => action(es));
+    def(anonymous, symbols, (es) => action(es), true);
     return ref(anonymous);
 }
 
 export function string(literal) {
     let anonymous = Symbol();
-    def(anonymous, literal.split(''), (es) => es.join(''));
+    def(anonymous, literal.split(''), (es) => es.join(''), true);
     return ref(anonymous);
 }
 
 export function many(symbol) {
     let anonymous = Symbol();
-    def(anonymous, [], () => []);
-    def(anonymous, [symbol, ref(anonymous)], ([e1, e2]) => [e1, ...e2]);
+    def(anonymous, [], () => [], true);
+    def(anonymous, [symbol, ref(anonymous)], ([e1, e2]) => [e1, ...e2], true);
     return ref(anonymous);
 }
 
 export function many1(symbol) {
     let anonymous = Symbol();
-    def(anonymous, [symbol, many(symbol)], ([e1, e2]) => [e1, ...e2]);
+    def(anonymous, [symbol, many(symbol)], ([e1, e2]) => [e1, ...e2], true);
     return ref(anonymous);
 }
 
 export function optional(symbol) {
     let anonymous = Symbol();
-    def(anonymous, [], () => null);
-    def(anonymous, [symbol], ([e1]) => e1);
+    def(anonymous, [], () => null, true);
+    def(anonymous, [symbol], ([e1]) => e1, true);
     return ref(anonymous);
 }
 
 export function choice(...symbols) {
     let anonymous = Symbol();
     for (let symbol of symbols) {
-        def(anonymous, [symbol], ([e1]) => e1);
+        def(anonymous, [symbol], ([e1]) => e1, true);
     }
     return ref(anonymous);
 }
@@ -66,7 +66,7 @@ export function choice(...symbols) {
 export function sepBy(symbol, sepSymbol) {
     let anonymous = Symbol();
     let tail = many(bind([sepSymbol, symbol], ([e1, e2]) => e2));
-    def(anonymous, [symbol, tail], ([e1, e2]) => [e1, ...e2]);
+    def(anonymous, [symbol, tail], ([e1, e2]) => [e1, ...e2], true);
     return ref(anonymous);
 }
 
