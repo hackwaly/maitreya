@@ -1,11 +1,20 @@
+import {Record} from 'immutable';
 export /*internal*/ const START = Symbol();
 
 let currentGrammar = null;
 let currentGrammarStartId = null;
 
-export /*internal*/ class Ref {
+export /*internal*/ class Ref extends Record({id: null}) {
     constructor(id) {
-        this.id = id;
+        super({id: id});
+    }
+    toString() {
+        // TODO: support Symbol polyfill.
+        let name = this.id;
+        if (typeof name === 'symbol') {
+            name = '*';
+        }
+        return `<${name}>`;
     }
 }
 

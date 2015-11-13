@@ -12,6 +12,21 @@ class Path extends Record({production: null, cursor: null}) {
     get atEnd() {
         return this.cursor === this.production.symbols.length;
     }
+    toString() {
+        let buffer = [];
+        let symbols = this.production.symbols;
+        for (let i = 0; i < symbols.length; i++) {
+            if (i === this.cursor) {
+                buffer.push('•');
+            }
+            buffer.push(symbols[i]);
+        }
+        let name = this.production.id;
+        if (typeof name === 'symbol') {
+            name = '*';
+        }
+        return `${name} → ${buffer.join(' ')}`;
+    }
 }
 
 export default function preprocess(grammar) {
@@ -42,7 +57,7 @@ export default function preprocess(grammar) {
 
         for (let path of state) {
             if (path.atEnd) {
-                reduceSet.add(path.production.id);
+                reduceSet.add(path.production);
             } else {
                 let symbol = path.currentSymbol;
                 let nextPathSet = Set();
@@ -55,7 +70,9 @@ export default function preprocess(grammar) {
             }
         }
 
-        reduceTable.set(state, reduceSet.asImmutable());
+        if (reduceSet.size > 0) {
+            reduceTable.set(state, reduceSet.asImmutable());
+        }
         shiftTable.set(state, symbolToNextStateMap.asImmutable());
 
         for (let nextState of symbolToNextStateMap.values()) {
@@ -68,7 +85,7 @@ export default function preprocess(grammar) {
     }
 
     return {
-        startPath,
+        startState,
         shiftTable: shiftTable.asImmutable(),
         reduceTable: reduceTable.asImmutable()
     };
