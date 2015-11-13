@@ -9,6 +9,7 @@ When you want to design and implement a new programming language. You want to pr
 ## Features
 
 - Accept GLR grammar, not limited to LR(k) grammar.
+- Support incremental parsing.
 - Can do both scanner less parsing and token based parsing.
 - Can build grammar on the fly by using parser combinators.
 - Support both interpretation and code genearation.
