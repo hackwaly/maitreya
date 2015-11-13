@@ -52,7 +52,10 @@ export class LR0Parser extends ParserBase {
     }
 }
 
+// FIXME: The commented code makes test failed.
+/*
 const StateAndReduce = Record({state: null, reduce: null});
+*/
 
 export class GLRParser extends ParserBase {
     constructor(grammar, tokenToSymbol) {
@@ -66,15 +69,20 @@ export class GLRParser extends ParserBase {
     reduce() {
         let stackToResultMap = this.stackToResultMap;
         let newStackToResultMap = Map().asMutable();
+        /*
         let setOfCheckedStateAndReduce = Set().asMutable();
+        */
         let stackReduce = (stack, result) => {
             let state = stack.first();
+            newStackToResultMap.set(stack, result);
             for (let production of state.reduceSet) {
+                /*
                 let stateAndReduce = StateAndReduce({state: state, reduce: production});
                 if (setOfCheckedStateAndReduce.has(stateAndReduce)) {
                     continue;
                 }
                 setOfCheckedStateAndReduce.add(stateAndReduce);
+                */
                 let {symbols, action} = production;
                 let data = symbols.length <= 0 ? [] : result.slice(-symbols.length);
                 let newResult = symbols.length <= 0 ? result.slice(0) : result.slice(0, -symbols.length);

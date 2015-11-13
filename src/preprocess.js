@@ -6,17 +6,22 @@ export default function preprocess(grammar) {
     let pathSetToStateMap = Map().asMutable();
 
     function expand(path) {
-        let pathSet = Set([path]);
-        if (path.atEnd) {
+        let walkedNonterminalSet = Set().asMutable();
+        function walk(path) {
+            let pathSet = Set([path]);
+            if (path.atEnd) {
+                return pathSet;
+            }
+            let symbol = path.currentSymbol;
+            if (symbol instanceof Nonterminal && !walkedNonterminalSet.has(symbol)) {
+                walkedNonterminalSet.add(symbol);
+                for (let production of grammar.productions[symbol.id]) {
+                    pathSet = pathSet.union(walk(new Path(production, 0)));
+                }
+            }
             return pathSet;
         }
-        let symbol = path.currentSymbol;
-        if (symbol instanceof Nonterminal) {
-            for (let production of grammar[symbol.id]) {
-                pathSet = pathSet.union(expand(new Path(production, 0)));
-            }
-        }
-        return pathSet;
+        return walk(path);
     }
 
     function pathSetToState(pathSet) {
@@ -29,7 +34,7 @@ export default function preprocess(grammar) {
         return state;
     }
 
-    let startPath = new Path(grammar[START][0], 0);
+    let startPath = new Path(grammar.productions[START][0], 0);
     let startState = pathSetToState(expand(startPath));
     let stack = [startState];
 
