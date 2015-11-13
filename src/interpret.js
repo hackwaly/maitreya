@@ -4,41 +4,34 @@ import preprocess from './preprocess';
 export class LR0Parser {
     constructor(grammar) {
         this.grammar = grammar;
-        let {startState, shiftTable, reduceTable} = preprocess(grammar);
-        this.startState = startState;
-        this.shiftTable = shiftTable;
-        this.reduceTable = reduceTable;
+        let startState = preprocess(grammar);
         this.stack = [startState];
         this.result = [];
         this.reduce();
     }
     reduce() {
-        let state = this.stack.pop();
-        if (this.reduceTable.has(state)) {
-            let reduceSet = this.reduceTable.get(state);
-            let production = reduceSet.first();
-            if (production === this.grammar[START][0]) {
-                this.result = this.stack[0];
-            } else {
-                let {symbols, action} = production;
-                let result = this.result.slice(-symbols.length);
-                this.result.length -= symbols.length;
-                if (action !== null) {
-                    result = action(result);
-                }
-                this.result.push(result);
+        let state = this.stack[this.stack.length - 1];
+        if (!state.reduceSet.isEmpty()) {
+            let production = state.reduceSet.first();
+            let {symbols, action} = production;
+            let result = this.result.slice(-symbols.length);
+            this.result.length -= symbols.length;
+            if (action !== null) {
+                result = action(result);
             }
-            this.next(new Ref(production.id));
-        } else {
-            this.stack.push(state);
+            this.stack.length -= symbols.length;
+            this.next(new Ref(production.id), result);
         }
     }
-    next(input) {
-        let state = this.stack.pop();
-        let nextTable = this.shiftTable.get(state);
-        let nextState = nextTable.get(input);
-        this.stack.push(state);
-        this.result.push(input);
+    next(input, result) {
+        let state = this.stack[this.stack.length - 1];
+        this.result.push(input instanceof Ref ? result : input);
+        if (input instanceof Ref && input.id === START) {
+            return;
+        }
+        let nextState = state.shiftMap.get(input);
+        this.stack.push(nextState);
+        // Nonterminal result is pushed in this.reduce() before.
         this.reduce();
     }
     feed(stream) {

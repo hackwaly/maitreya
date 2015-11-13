@@ -12,8 +12,9 @@ let testGrammar = defineGrammar(() => {
     def('B', ['b']);
 });
 
-let {startState, shiftTable} = preprocess(testGrammar);
-console.log(startState.toString());
+//let startState = preprocess(testGrammar);
+//console.log(startState);
+
 let parser = new LR0Parser(testGrammar);
 parser.feed('ab');
-
+console.log(parser);

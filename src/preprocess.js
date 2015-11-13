@@ -1,35 +1,10 @@
-import {Ref, START} from './types';
+import {Ref, START, Path, State} from './types';
 import {Map, Set, Record} from 'immutable';
 
-// I do not like to use new keyword. But there is no easy way for now.
-class Path extends Record({production: null, cursor: null}) {
-    constructor(production, cursor) {
-        super({production, cursor});
-    }
-    get currentSymbol() {
-        return this.production.symbols[this.cursor];
-    }
-    get atEnd() {
-        return this.cursor === this.production.symbols.length;
-    }
-    toString() {
-        let buffer = [];
-        let symbols = this.production.symbols;
-        for (let i = 0; i < symbols.length; i++) {
-            if (i === this.cursor) {
-                buffer.push('•');
-            }
-            buffer.push(symbols[i]);
-        }
-        let name = this.production.id;
-        if (typeof name === 'symbol') {
-            name = '*';
-        }
-        return `${name} → ${buffer.join(' ')}`;
-    }
-}
-
 export default function preprocess(grammar) {
+    let nextStateId = 0;
+    let pathSetToStateMap = Map().asMutable();
+
     function expand(path) {
         let pathSet = Set([path]);
         if (path.atEnd) {
@@ -44,49 +19,62 @@ export default function preprocess(grammar) {
         return pathSet;
     }
 
-    let startPath = new Path(grammar[START][0], 0);
-    let startState = expand(startPath);
+    function pathSetToState(pathSet) {
+        if (pathSetToStateMap.has(pathSet)) {
+            return pathSetToStateMap.get(pathSet);
+        }
+        let state = new State(nextStateId++);
+        state.pathSet = pathSet;
+        pathSetToStateMap[pathSet] = state;
+        return state;
+    }
+
+    let startProduction = grammar[START][0];
+    let startSymbol = startProduction.symbols[0];
+    let startPath = new Path(startProduction, 0);
+    let startState = pathSetToState(expand(startPath));
     let stack = [startState];
 
-    let shiftTable = Map().asMutable();
-    let reduceTable = Map().asMutable();
+    let walkedStates = Set().asMutable();
 
     function walk(state) {
-        let symbolToNextStateMap = Map().asMutable();
+        if (walkedStates.has(state)) {
+            return;
+        }
+        walkedStates.add(state);
+
+        let symbolToPathSet = Map().asMutable();
         let reduceSet = Set().asMutable();
 
-        for (let path of state) {
+        for (let path of state.pathSet) {
             if (path.atEnd) {
                 reduceSet.add(path.production);
             } else {
                 let symbol = path.currentSymbol;
                 let nextPathSet = Set();
-                if (symbolToNextStateMap.has(symbol)) {
-                    nextPathSet = symbolToNextStateMap.get(symbol);
+                if (symbolToPathSet.has(symbol)) {
+                    nextPathSet = symbolToPathSet.get(symbol);
                 }
                 let nextPath = new Path(path.production, path.cursor + 1);
                 nextPathSet = nextPathSet.union(expand(nextPath));
-                symbolToNextStateMap.set(symbol, nextPathSet);
+                symbolToPathSet.set(symbol, nextPathSet);
             }
         }
 
-        if (reduceSet.size > 0) {
-            reduceTable.set(state, reduceSet.asImmutable());
-        }
-        shiftTable.set(state, symbolToNextStateMap.asImmutable());
-
-        for (let nextState of symbolToNextStateMap.values()) {
+        state.reduceSet = reduceSet.asImmutable();
+        let shiftMap = Map().asMutable();
+        for (let symbol of symbolToPathSet.keys()) {
+            let pathSet = symbolToPathSet.get(symbol);
+            let nextState = pathSetToState(pathSet);
+            shiftMap.set(symbol, nextState);
             stack.push(nextState);
         }
+        state.shiftMap = shiftMap.asImmutable();
     }
 
     while (stack.length > 0) {
         walk(stack.pop());
     }
 
-    return {
-        startState,
-        shiftTable: shiftTable.asImmutable(),
-        reduceTable: reduceTable.asImmutable()
-    };
+    return startState;
 }
