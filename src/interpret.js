@@ -103,12 +103,13 @@ export class GLRParser extends ParserBase {
         };
     }
     next(symbol, data) {
+        this.results = [];
+
         let stackToResultMap = this.stackToResultMap;
         if (stackToResultMap.size === 0) {
             return;
         }
 
-        this.results = [];
         let newStackToResultMap = Map().asMutable();
         for (let stack of stackToResultMap.keys()) {
             let result = stackToResultMap.get(stack);
