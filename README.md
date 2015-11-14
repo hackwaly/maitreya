@@ -4,7 +4,7 @@
 
 Maitreya is a generalized LR parser generator written in javascript.
 
-When you want to design and implement a new programming language. You want to prototype the grammar quickly. You may change the grammar over over again. I have used PEGjs. It still far away my goal. So, I wrote Maitreya. With the power of generalized LR parser, free your mind away from "left recursive", "ambiguity", "look ahead", "separated list" ...
+When you want to design and implement a new programming language. You want to prototype the grammar quickly. You may change the grammar over over again. I have used PEGjs. It still far away my goal. So, I wrote Maitreya. With the power of generalized LR parser, free your mind away from "left recursive", “shift/reduce reduce/reduce conflict”, "ambiguity", "look ahead", "separated list" ...
 
 ## Features
 
