@@ -17,15 +17,23 @@ When you want to design and implement a new programming language. You want to pr
 ## Example
 
 ```javascript
-import {defineGrammar, def, ref, many} from 'maitreya/grammar';
-import {GLRParser} from 'maitreya/interpret';
+import {defineGrammar, def, ref, many1, regex, choice} from '../../src/grammar';
+import {GLRParser} from '../../src/interpret';
+
 let grammar = defineGrammar(() => {
-    def('S', [many(ref('P'))]);
-    def('P', []);
-    def('P', ['(', ref('P') ')']);
+    def('exp', [ref('num')], ([num]) => num);
+    def('exp', [ref('exp'), ref('op'), ref('exp')], ([lhs, op, rhs]) => op(lhs, rhs));
+    def('num', [many1(regex(/^[0-9]/))], ([digits]) => Number(digits.join('')));
+    def('op', [choice('+', '-')], ([op]) => {
+        return {
+            ['+'](lhs, rhs) { return lhs + rhs; },
+            ['-'](lhs, rhs) { return lhs - rhs; }
+        }[op];
+    });
 });
+
 let parser = new GLRParser(grammar);
-parser.feed('(())()');
+parser.feed('3+2-5');
 console.log(parser.results);
 ```
 
