@@ -1,7 +1,13 @@
 import {Nonterminal, START, ANY, Path, State} from './types';
 import {Map, Set, Record} from 'immutable';
 
+let CACHED = Symbol();
+
 export default function preprocess(grammar) {
+    if (grammar[CACHED] !== undefined) {
+        return grammar[CACHED];
+    }
+
     let nextStateId = 0;
     let pathSetToStateMap = Map().asMutable();
 
@@ -95,6 +101,8 @@ export default function preprocess(grammar) {
     while (stack.length > 0) {
         walk(stack.pop());
     }
+
+    grammar[CACHED] = startState;
 
     return startState;
 }
