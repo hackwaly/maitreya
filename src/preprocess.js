@@ -1,4 +1,4 @@
-import {Nonterminal, START, Path, State} from './types';
+import {Nonterminal, START, ANY, Path, State} from './types';
 import {Map, Set, Record} from 'immutable';
 
 export default function preprocess(grammar) {
@@ -47,6 +47,7 @@ export default function preprocess(grammar) {
         walkedStates.add(state);
 
         let symbolToPathSet = Map().asMutable();
+        let anySymbolPathSet = Set().asMutable();
         let reduceSet = Set().asMutable();
 
         for (let path of state.pathSet) {
@@ -54,24 +55,40 @@ export default function preprocess(grammar) {
                 reduceSet.add(path.production);
             } else {
                 let symbol = path.currentSymbol;
-                let nextPathSet = Set();
-                if (symbolToPathSet.has(symbol)) {
-                    nextPathSet = symbolToPathSet.get(symbol);
-                }
                 let nextPath = new Path(path.production, path.cursor + 1);
-                nextPathSet = nextPathSet.union(expand(nextPath));
-                symbolToPathSet.set(symbol, nextPathSet);
+                if (symbol === ANY) {
+                    anySymbolPathSet.union(expand(nextPath));
+                } else {
+                    let nextPathSet = Set();
+                    if (symbolToPathSet.has(symbol)) {
+                        nextPathSet = symbolToPathSet.get(symbol);
+                    }
+                    nextPathSet = nextPathSet.union(expand(nextPath));
+                    symbolToPathSet.set(symbol, nextPathSet);
+                }
             }
         }
-
         state.reduceSet = reduceSet.asImmutable();
         let shiftMap = Map().asMutable();
+
+        anySymbolPathSet = anySymbolPathSet.asImmutable();
+
         for (let symbol of symbolToPathSet.keys()) {
             let pathSet = symbolToPathSet.get(symbol);
+            if (!(symbol instanceof Nonterminal)) {
+                pathSet = pathSet.union(anySymbolPathSet);
+            }
             let nextState = pathSetToState(pathSet);
             shiftMap.set(symbol, nextState);
             stack.push(nextState);
         }
+
+        if (anySymbolPathSet.size > 0) {
+            let anyNextState = pathSetToState(anySymbolPathSet);
+            shiftMap.set(ANY, anyNextState);
+            stack.push(anyNextState);
+        }
+
         state.shiftMap = shiftMap.asImmutable();
     }
 

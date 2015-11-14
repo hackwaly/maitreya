@@ -1,6 +1,11 @@
 import {Record, Set, Map} from 'immutable';
 
 export const START = Symbol();
+export const ANY = {
+    toString() {
+        return '#any';
+    }
+};
 
 export class Nonterminal extends Record({id: null}) {
     constructor(id) {

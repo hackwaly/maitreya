@@ -1,4 +1,4 @@
-import {START, Grammar, Nonterminal, Production} from './types';
+import {START, ANY, Grammar, Nonterminal, Production} from './types';
 
 let currentGrammar = null;
 
@@ -22,6 +22,8 @@ export function ref(id) {
 //region { Utilities }
 
 // TODO: Use Immutable struct to deduplicate.
+
+export const any = ANY;
 
 export function bind(symbols, action) {
     let anonymous = Symbol();
