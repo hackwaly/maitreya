@@ -96,7 +96,6 @@ export class GLRParser extends ParserBase {
         } else {
             return null;
         }
-        state.shiftMap.get(symbol);
         let newStack = stack.unshift(newState);
         return {
             stack: newStack,
