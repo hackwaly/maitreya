@@ -16,48 +16,32 @@ export class Reject {
 export class Nonterminal extends Record({id: null}) {
     constructor(id) {
         super({id: id});
+        this.productions = [];
     }
     toString() {
-        // TODO: support Symbol polyfill.
-        let name = this.id;
-        if (typeof name === 'symbol') {
-            name = '*';
-        }
-        return `<${name}>`;
+        return `<${this.id}>`;
     }
 }
 
 export class Grammar {
     constructor(name = null) {
         this.name = name;
-        this.productions = Object.create(null);
-        this.startId = null;
-        this.allIds = [];
+        this.nonterminals = Object.create(null);
+        this.start = null;
     }
     toString() {
-        let head = this.name !== null ? `Grammar(${this.name})` : 'Grammar';
-        let productions = [];
-        for (let id of this.allIds) {
-            for (let production of this.productions[id]) {
-                productions.push(production);
-            }
-        }
-        return `${head} { ${productions.join('; ')} }`;
+
     }
 }
 
 export class Production {
-    constructor(id, symbols, action = null) {
-        this.id = id;
+    constructor(nonterminal, symbols, action = null) {
+        this.nonterminal = nonterminal;
         this.symbols = symbols;
         this.action = action;
     }
     toString() {
-        let name = this.id;
-        if (typeof name === 'symbol') {
-            name = '*';
-        }
-        return `${name} → ${this.symbols.join(' ')}`;
+        return `${this.nonterminal.id} → ${this.symbols.join(' ')}`;
     }
 }
 

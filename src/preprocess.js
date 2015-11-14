@@ -21,7 +21,7 @@ export default function preprocess(grammar) {
             let symbol = path.currentSymbol;
             if (symbol instanceof Nonterminal && !walkedNonterminalSet.has(symbol)) {
                 walkedNonterminalSet.add(symbol);
-                for (let production of grammar.productions[symbol.id]) {
+                for (let production of symbol.productions) {
                     pathSet = pathSet.union(walk(new Path(production, 0)));
                 }
             }
@@ -40,7 +40,7 @@ export default function preprocess(grammar) {
         return state;
     }
 
-    let startPath = new Path(grammar.productions[START][0], 0);
+    let startPath = new Path(grammar.nonterminals[START].productions[0], 0);
     let startState = pathSetToState(expand(startPath));
     let stack = [startState];
 

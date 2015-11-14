@@ -57,7 +57,7 @@ export class GLRParser extends ParserBase {
                 } else {
                     let newResult = symbols.length <= 0 ? result.slice(0) : result.slice(0, -symbols.length);
                     let newStack = stack.skip(symbols.length);
-                    let nexted = this.stackNext(newStack, newResult, new Nonterminal(production.id), data);
+                    let nexted = this.stackNext(newStack, newResult, production.nonterminal, data);
                     if (nexted !== null) {
                         newStackToResultMap.set(nexted.stack, nexted.result);
                         stackReduce(nexted.stack, nexted.result);

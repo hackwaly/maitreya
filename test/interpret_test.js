@@ -38,9 +38,9 @@ describe('interpret_test', () => {
         return parser.results;
     }
 
-    //it('simple', () => {
-    //    expect(parse(simpleGrammar, 'ab')).to.deep.equal([[['a'], ['b']]]);
-    //});
+    it('simple', () => {
+        expect(parse(simpleGrammar, 'ab')).to.deep.equal([[['a'], ['b']]]);
+    });
     it('any', () => {
         expect(parse(anyGrammar, 'a')).to.deep.equal([['a']]);
         expect(parse(anyGrammar, 'b')).to.deep.equal([['b']]);

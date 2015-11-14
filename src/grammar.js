@@ -3,20 +3,21 @@ import {START, ANY, Reject, Grammar, Nonterminal, Production} from './types';
 let currentGrammar = null;
 
 export function def(id, symbols, action, isGenerated = false) {
-    let productions = currentGrammar.productions[id];
-    if (productions === undefined) {
-        productions = [];
-        currentGrammar.productions[id] = productions;
-        currentGrammar.allIds.push(id);
-    }
-    productions.push(new Production(id, symbols, action));
-    if (!isGenerated && currentGrammar.startId === null) {
-        currentGrammar.startId = id;
+    let nonterminal = ref(id);
+    let production = new Production(nonterminal, symbols, action);
+    nonterminal.productions.push(production);
+    if (!isGenerated && currentGrammar.start === null) {
+        currentGrammar.start = nonterminal;
     }
 }
 
 export function ref(id) {
-    return new Nonterminal(id);
+    let nonterminal = currentGrammar.nonterminals[id];
+    if (nonterminal === undefined) {
+        nonterminal = new Nonterminal(id);
+        currentGrammar.nonterminals[id] = nonterminal;
+    }
+    return nonterminal;
 }
 
 //region { Utilities }
@@ -78,57 +79,6 @@ export function times(min, max = min) {
 
 //endregion
 
-// Only for LR0.
-export function eliminateLeftRecursive(grammar) {
-    function classify(productions) {
-        let recursived = [];
-        let nonrecursived = [];
-        let hasEpsilon = false;
-        function checkLeftRecursive(production) {
-            let symbols = production.symbols;
-            if (symbols.length === 0) {
-                hasEpsilon = true;
-                return false;
-            }
-            let symbol = symbols[0];
-            return symbol instanceof Nonterminal && symbol.id === production.id;
-        }
-        for (let production of productions) {
-            if (checkLeftRecursive(production)) {
-                recursived.push(production);
-            } else {
-                nonrecursived.push(production);
-            }
-        }
-        return {recursived, nonrecursived, hasEpsilon};
-    }
-
-    // http://www.csd.uwo.ca/~moreno//CS447/Lectures/Syntax.html/node8.html
-    function eliminate(id) {
-        let productions = grammar.productions[id];
-        let {recursived, nonrecursived, hasEpsilon} = classify(productions);
-        if (recursived.length === 0) {
-            return;
-        }
-        if (nonrecursived.length === 0 || (recursived.length > 0 && hasEpsilon)) {
-            throw new Error('TODO: Error message');
-        }
-        // TODO: Give action.
-        let anonymous = Symbol();
-        grammar.productions[id] = nonrecursived.map((production) => {
-            return new Production(id, [...production.symbols, ref(anonymous)]);
-        });
-        grammar.productions[anonymous] = [new Production(anonymous, []), ...recursived.map((production) => {
-            return new Production(anonymous, [...production.symbols.slice(1), ref(anonymous)]);
-        })];
-        grammar.allIds.push(anonymous);
-    }
-
-    for (let id of grammar.allIds.slice(0)) {
-        eliminate(id);
-    }
-}
-
 export function defineGrammar() {
     let name;
     let func;
@@ -140,11 +90,8 @@ export function defineGrammar() {
     }
     let grammar = new Grammar(name);
     currentGrammar = grammar;
-    let startId = func();
-    if (startId !== undefined) {
-        grammar.startId = startId;
-    }
-    def(START, [ref(grammar.startId)]);
+    func();
+    def(START, [grammar.start]);
     currentGrammar = null;
     return grammar;
 }
