@@ -1,4 +1,4 @@
-import {START, ANY, Grammar, Nonterminal, Production} from './types';
+import {START, ANY, Reject, Grammar, Nonterminal, Production} from './types';
 
 let currentGrammar = null;
 
@@ -27,7 +27,7 @@ export const any = ANY;
 
 export function bind(symbols, action) {
     let anonymous = Symbol();
-    def(anonymous, symbols, (es) => action(es), true);
+    def(anonymous, symbols, (es) => action(es, Reject), true);
     return ref(anonymous);
 }
 

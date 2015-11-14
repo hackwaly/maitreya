@@ -1,4 +1,4 @@
-import {START, ANY, Nonterminal} from './types';
+import {START, ANY, Reject, Nonterminal} from './types';
 import preprocess from './preprocess';
 import {Map, Set, Record, Stack} from 'immutable';
 
@@ -26,12 +26,19 @@ export class GLRParser extends ParserBase {
         let startState = preprocess(grammar);
         this.stackToResultMap = Map([[Stack([startState]), []]]);
         this.results = [];
+        this.errors = [];
         this.reduce();
     }
     reduce() {
         let stackToResultMap = this.stackToResultMap;
+        if (stackToResultMap.size === 0) {
+            return;
+        }
+
         let newStackToResultMap = Map().asMutable();
         let failedReduceTrySet = Set().asMutable();
+        let errors = [];
+
         let stackReduce = (stack, result) => {
             let state = stack.first();
             for (let production of state.reduceSet) {
@@ -41,26 +48,36 @@ export class GLRParser extends ParserBase {
                 }
                 let {symbols, action} = production;
                 let data = symbols.length <= 0 ? [] : result.slice(-symbols.length);
-                let newResult = symbols.length <= 0 ? result.slice(0) : result.slice(0, -symbols.length);
                 if (action !== null) {
                     data = action(data);
                 }
-                let newStack = stack.skip(symbols.length);
-                let nexted = this.stackNext(newStack, newResult, new Nonterminal(production.id), data);
-                if (nexted !== null) {
-                    newStackToResultMap.set(nexted.stack, nexted.result);
-                    stackReduce(nexted.stack, nexted.result);
-                } else {
+                if (data instanceof Reject) {
+                    errors.push(data);
                     failedReduceTrySet.add(reduceTry);
+                } else {
+                    let newResult = symbols.length <= 0 ? result.slice(0) : result.slice(0, -symbols.length);
+                    let newStack = stack.skip(symbols.length);
+                    let nexted = this.stackNext(newStack, newResult, new Nonterminal(production.id), data);
+                    if (nexted !== null) {
+                        newStackToResultMap.set(nexted.stack, nexted.result);
+                        stackReduce(nexted.stack, nexted.result);
+                    } else {
+                        failedReduceTrySet.add(reduceTry);
+                    }
                 }
             }
         };
+
         for (let stack of stackToResultMap.keys()) {
             let result = stackToResultMap.get(stack);
             newStackToResultMap.set(stack, result);
             stackReduce(stack, result);
         }
+
         this.stackToResultMap = newStackToResultMap;
+        if (this.stackToResultMap.size === 0) {
+            this.errors = errors;
+        }
     }
     stackNext(stack, result, symbol, data) {
         let state = stack.first();
@@ -87,8 +104,12 @@ export class GLRParser extends ParserBase {
         };
     }
     next(symbol, data) {
-        this.results = [];
         let stackToResultMap = this.stackToResultMap;
+        if (stackToResultMap.size === 0) {
+            return;
+        }
+
+        this.results = [];
         let newStackToResultMap = Map().asMutable();
         for (let stack of stackToResultMap.keys()) {
             let result = stackToResultMap.get(stack);

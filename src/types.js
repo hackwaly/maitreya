@@ -7,6 +7,12 @@ export const ANY = {
     }
 };
 
+export class Reject {
+    constructor(error) {
+        this.error = error;
+    }
+}
+
 export class Nonterminal extends Record({id: null}) {
     constructor(id) {
         super({id: id});
