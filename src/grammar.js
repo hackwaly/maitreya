@@ -26,51 +26,164 @@ export function ref(id) {
 
 export const any = ANY;
 
-export function bind(symbols, action) {
-    let anonymous = Symbol();
-    def(anonymous, symbols, (es) => action(es, Reject), true);
-    return ref(anonymous);
+class Rule extends Nonterminal {
+    constructor() {
+        super(Symbol());
+        currentGrammar[this.id] = this;
+    }
+    def(symbols, action = null) {
+        this.productions.push(new Production(this, symbols, action));
+    }
+}
+
+const REJECT = new Reject();
+
+export function reject(error) {
+    return new Reject(error);
+}
+
+class BindRule extends Rule {
+    constructor(symbol, action) {
+        super();
+        if (Array.isArray(symbol)) {
+            this.def(symbol, (es) => action(es, REJECT));
+        } else {
+            this.def([symbol], ([es]) => action(es, REJECT));
+        }
+    }
+}
+
+export function bind(symbol, action) {
+    return new BindRule(symbol, action);
+}
+
+class GroupRule extends Rule {
+    constructor(symbols) {
+        super();
+        this.def(symbols);
+    }
+}
+
+export function group(...symbols) {
+    return new GroupRule(symbols);
+}
+
+class StringRule extends Rule {
+    constructor(literal) {
+        super();
+        this.literal = literal;
+        this.def(literal.split(''), (es) => es.join(''));
+    }
+    toString() {
+        return JSON.stringify(this.literal);
+    }
 }
 
 export function string(literal) {
-    let anonymous = Symbol();
-    def(anonymous, literal.split(''), (es) => es.join(''), true);
-    return ref(anonymous);
+    return new StringRule(literal);
+}
+
+class RegexRule extends Rule {
+    constructor(regex) {
+        super();
+        this.regex = regex;
+        this.def([any], ([e1]) => {
+            if (!regex.test(e1)) {
+                return REJECT;
+            }
+            return e1;
+        });
+    }
+    toString() {
+        return `${this.regex.source}`;
+    }
+}
+
+export function regex(regex) {
+    return new RegexRule(regex);
+}
+
+class ManyRule extends Rule {
+    constructor(symbol) {
+        super();
+        this.symbol = symbol;
+        this.def([], () => []);
+        this.def([symbol, this], ([e1, e2]) => [e1, ...e2]);
+    }
+    toString() {
+        return `${this.symbol}*`;
+    }
 }
 
 export function many(symbol) {
-    let anonymous = Symbol();
-    def(anonymous, [], () => [], true);
-    def(anonymous, [symbol, ref(anonymous)], ([e1, e2]) => [e1, ...e2], true);
-    return ref(anonymous);
+    return new ManyRule(symbol);
+}
+
+class Many1Rule extends Rule {
+    constructor(symbol) {
+        super();
+        this.symbol = symbol;
+        this.def([symbol, many(symbol)], ([e1, e2]) => [e1, ...e2]);
+    }
+    toString() {
+        return `${this.symbol}+`;
+    }
 }
 
 export function many1(symbol) {
-    let anonymous = Symbol();
-    def(anonymous, [symbol, many(symbol)], ([e1, e2]) => [e1, ...e2], true);
-    return ref(anonymous);
+    return new Many1Rule(symbol);
+}
+
+class OptionalRule extends Rule {
+    constructor(symbol) {
+        super();
+        this.symbol = symbol;
+        this.def([], () => null);
+        this.def([symbol], ([e1]) => e1);
+    }
+    toString() {
+        return `${this.symbol}?`;
+    }
 }
 
 export function optional(symbol) {
-    let anonymous = Symbol();
-    def(anonymous, [], () => null, true);
-    def(anonymous, [symbol], ([e1]) => e1, true);
-    return ref(anonymous);
+    return new OptionalRule(symbol);
+}
+
+class ChoiceRule extends Rule {
+    constructor(symbols) {
+        super();
+        this.symbols = symbols;
+        for (let symbol of symbols) {
+            this.def([symbol], ([e1]) => e1);
+        }
+    }
+    toString() {
+        return `( ${this.symbols.join(' | ')} )`;
+    }
 }
 
 export function choice(...symbols) {
-    let anonymous = Symbol();
-    for (let symbol of symbols) {
-        def(anonymous, [symbol], ([e1]) => e1, true);
+    return new ChoiceRule(symbols);
+}
+
+class SepByRule extends Rule {
+    constructor(symbol, sepSymbol) {
+        super();
+        this.symbol = symbol;
+        this.sepSymbol = sepSymbol;
+        this.def([
+            symbol,
+            many(bind([sepSymbol, symbol], ([e1, e2]) => e2))
+        ], ([e1, e2]) => [e1, ...e2]);
     }
-    return ref(anonymous);
+    toString() {
+        return `( ${this.symbol} % ${this.sepSymbol} )`;
+    }
 }
 
 export function sepBy(symbol, sepSymbol) {
-    let anonymous = Symbol();
-    let tail = many(bind([sepSymbol, symbol], ([e1, e2]) => e2));
-    def(anonymous, [symbol, tail], ([e1, e2]) => [e1, ...e2], true);
-    return ref(anonymous);
+    return new SepByRule(symbol, sepSymbol);
 }
 
 export function times(min, max = min) {

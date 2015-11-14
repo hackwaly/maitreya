@@ -3,7 +3,7 @@ import {Record, Set, Map} from 'immutable';
 export const START = Symbol();
 export const ANY = {
     toString() {
-        return '#any';
+        return '.';
     }
 };
 
@@ -19,7 +19,7 @@ export class Nonterminal extends Record({id: null}) {
         this.productions = [];
     }
     toString() {
-        return `<${this.id}>`;
+        return `«${this.id}»`;
     }
 }
 
@@ -41,7 +41,11 @@ export class Production {
         this.action = action;
     }
     toString() {
-        return `${this.nonterminal.id} → ${this.symbols.join(' ')}`;
+        let name = this.nonterminal.id;
+        if (typeof name === 'symbol') {
+            name = name.toString();
+        }
+        return `${name} → ${this.symbols.join(' ')}`;
     }
 }
 
