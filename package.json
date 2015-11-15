@@ -1,7 +1,7 @@
 {
   "name": "maitreya",
   "description": "A generalized LR parser generator written in javascript",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "keywords": [
     "generalized",
     "LR",
