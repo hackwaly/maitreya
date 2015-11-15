@@ -1,7 +1,7 @@
 {
   "name": "maitreya",
   "description": "A generalized LR parser generator written in javascript",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "keywords": [
     "generalized",
     "LR",
@@ -51,5 +51,6 @@
   },
   "dependencies": {
     "immutable": "^3.7.5"
-  }
+  },
+  "tonicExampleFilename": "example/calc/calc.js"
 }
