@@ -31,7 +31,7 @@
     "directories": {
       "lib": "src"
     },
-    "main": "src/index",
+    "main": "index",
     "dependencies": {
       "immutable": "npm:immutable@^3.7.5"
     },

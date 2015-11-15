@@ -17,8 +17,8 @@ When you want to design and implement a new programming language. You want to pr
 ## Example
 
 ```javascript
-import {defineGrammar, def, ref, many1, regex, choice} from 'maitreya/lib/grammar';
-import {GLRParser} from 'maitreya/lib/interpret';
+import {defineGrammar, def, ref, many1, regex, choice} from 'maitreya/grammar';
+import {GLRParser} from 'maitreya/interpret';
 
 let grammar = defineGrammar(() => {
   def('exp', [ref('num')], ([num]) => num);
