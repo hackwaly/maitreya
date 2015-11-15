@@ -1,5 +1,5 @@
-let {defineGrammar, def, ref, many1, regex, choice} = require('maitreya/grammar');
-let {GLRParser} = require('maitreya/interpret');
+let {defineGrammar, def, ref, many1, regex, choice} = require('maitreya/lib/grammar');
+let {GLRParser} = require('maitreya/lib/interpret');
 
 let grammar = defineGrammar(() => {
     def('exp', [ref('num')], ([num]) => num);
