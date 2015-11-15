@@ -70,7 +70,7 @@ class StringRule extends Rule {
     constructor(literal) {
         super();
         this.literal = literal;
-        this.def(literal.split(''), (es) => es.join(''));
+        this.def(literal.split(''), (es) => literal);
     }
     toString() {
         return JSON.stringify(this.literal);
