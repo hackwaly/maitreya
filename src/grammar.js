@@ -36,8 +36,6 @@ class Rule extends Nonterminal {
     }
 }
 
-const REJECT = new Reject();
-
 export function reject(error) {
     return new Reject(error);
 }
@@ -46,9 +44,9 @@ class BindRule extends Rule {
     constructor(symbol, action) {
         super();
         if (Array.isArray(symbol)) {
-            this.def(symbol, (es) => action(es, REJECT));
+            this.def(symbol, (es) => action(es));
         } else {
-            this.def([symbol], ([es]) => action(es, REJECT));
+            this.def([symbol], ([es]) => action(es));
         }
     }
 }
@@ -89,7 +87,7 @@ class RegexRule extends Rule {
         this.regex = regex;
         this.def([any], ([e1]) => {
             if (!regex.test(e1)) {
-                return REJECT;
+                return reject(`expect ${this}`);
             }
             return e1;
         });
