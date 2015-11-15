@@ -5,4 +5,9 @@ node_modules/
 npm-debug.log
 seafile-ignore.txt
 tmp/
-lib/
+.gitignore
+.npmignore
+.travis.yml
+.babelrc
+test.html
+config.js
