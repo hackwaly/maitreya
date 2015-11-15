@@ -9,5 +9,3 @@ tmp/
 .npmignore
 .travis.yml
 .babelrc
-test.html
-config.js
