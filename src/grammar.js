@@ -2,6 +2,23 @@ import {START, ANY, Reject, Grammar, Nonterminal, Production} from './types';
 
 let currentGrammar = null;
 
+export function defineGrammar() {
+    let name;
+    let func;
+    if (arguments.length <= 1) {
+        func = arguments[0];
+    } else {
+        name = arguments[0];
+        func = arguments[1];
+    }
+    let grammar = new Grammar(name);
+    currentGrammar = grammar;
+    func();
+    def(START, [grammar.start]);
+    currentGrammar = null;
+    return grammar;
+}
+
 export function def(id, symbols, action, isGenerated = false) {
     let nonterminal = ref(id);
     let production = new Production(nonterminal, symbols, action);
@@ -20,11 +37,15 @@ export function ref(id) {
     return nonterminal;
 }
 
+export const any = ANY;
+
+export function reject(error) {
+    return new Reject(error);
+}
+
 //region { Utilities }
 
 // TODO: Use Immutable struct to deduplicate.
-
-export const any = ANY;
 
 class Rule extends Nonterminal {
     constructor() {
@@ -34,10 +55,6 @@ class Rule extends Nonterminal {
     def(symbols, action = null) {
         this.productions.push(new Production(this, symbols, action));
     }
-}
-
-export function reject(error) {
-    return new Reject(error);
 }
 
 class BindRule extends Rule {
@@ -64,6 +81,81 @@ class GroupRule extends Rule {
 
 export function group(...symbols) {
     return new GroupRule(symbols);
+}
+
+class ChoiceRule extends Rule {
+    constructor(symbols) {
+        super();
+        this.symbols = symbols;
+        for (let symbol of symbols) {
+            this.def([symbol], ([e1]) => e1);
+        }
+    }
+    toString() {
+        return `( ${this.symbols.join(' | ')} )`;
+    }
+}
+
+export function choice(...symbols) {
+    return new ChoiceRule(symbols);
+}
+
+export function many(symbol) {
+    return new ManyRule(symbol);
+}
+
+class Many1Rule extends Rule {
+    constructor(symbol) {
+        super();
+        this.symbol = symbol;
+        this.def([symbol, many(symbol)], ([e1, e2]) => [e1, ...e2]);
+    }
+    toString() {
+        return `${this.symbol}+`;
+    }
+}
+
+export function many1(symbol) {
+    return new Many1Rule(symbol);
+}
+
+class OptionalRule extends Rule {
+    constructor(symbol) {
+        super();
+        this.symbol = symbol;
+        this.def([], () => null);
+        this.def([symbol], ([e1]) => e1);
+    }
+    toString() {
+        return `${this.symbol}?`;
+    }
+}
+
+export function optional(symbol) {
+    return new OptionalRule(symbol);
+}
+
+// TODO:
+export function times(min, max = min) {
+}
+
+class SepByRule extends Rule {
+    constructor(symbol, sepSymbol) {
+        super();
+        this.symbol = symbol;
+        this.sepSymbol = sepSymbol;
+        this.def([
+            symbol,
+            many(bind([sepSymbol, symbol], ([e1, e2]) => e2))
+        ], ([e1, e2]) => [e1, ...e2]);
+    }
+    toString() {
+        return `( ${this.symbol} % ${this.sepSymbol} )`;
+    }
+}
+
+export function sepBy(symbol, sepSymbol) {
+    return new SepByRule(symbol, sepSymbol);
 }
 
 class StringRule extends Rule {
@@ -113,96 +205,4 @@ class ManyRule extends Rule {
     }
 }
 
-export function many(symbol) {
-    return new ManyRule(symbol);
-}
-
-class Many1Rule extends Rule {
-    constructor(symbol) {
-        super();
-        this.symbol = symbol;
-        this.def([symbol, many(symbol)], ([e1, e2]) => [e1, ...e2]);
-    }
-    toString() {
-        return `${this.symbol}+`;
-    }
-}
-
-export function many1(symbol) {
-    return new Many1Rule(symbol);
-}
-
-class OptionalRule extends Rule {
-    constructor(symbol) {
-        super();
-        this.symbol = symbol;
-        this.def([], () => null);
-        this.def([symbol], ([e1]) => e1);
-    }
-    toString() {
-        return `${this.symbol}?`;
-    }
-}
-
-export function optional(symbol) {
-    return new OptionalRule(symbol);
-}
-
-class ChoiceRule extends Rule {
-    constructor(symbols) {
-        super();
-        this.symbols = symbols;
-        for (let symbol of symbols) {
-            this.def([symbol], ([e1]) => e1);
-        }
-    }
-    toString() {
-        return `( ${this.symbols.join(' | ')} )`;
-    }
-}
-
-export function choice(...symbols) {
-    return new ChoiceRule(symbols);
-}
-
-class SepByRule extends Rule {
-    constructor(symbol, sepSymbol) {
-        super();
-        this.symbol = symbol;
-        this.sepSymbol = sepSymbol;
-        this.def([
-            symbol,
-            many(bind([sepSymbol, symbol], ([e1, e2]) => e2))
-        ], ([e1, e2]) => [e1, ...e2]);
-    }
-    toString() {
-        return `( ${this.symbol} % ${this.sepSymbol} )`;
-    }
-}
-
-export function sepBy(symbol, sepSymbol) {
-    return new SepByRule(symbol, sepSymbol);
-}
-
-export function times(min, max = min) {
-    // TODO:
-}
-
 //endregion
-
-export function defineGrammar() {
-    let name;
-    let func;
-    if (arguments.length <= 1) {
-        func = arguments[0];
-    } else {
-        name = arguments[0];
-        func = arguments[1];
-    }
-    let grammar = new Grammar(name);
-    currentGrammar = grammar;
-    func();
-    def(START, [grammar.start]);
-    currentGrammar = null;
-    return grammar;
-}
