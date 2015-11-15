@@ -36,7 +36,7 @@ let parser = new GLRParser(grammar);
 parser.feed('3+2-5');
 console.log(parser.results);
 ```
-Still interested? Look the [API Reference](https://github.com/hackwaly/maitreya/wiki/API-Reference)
+Still interested? Look at the [API Reference](https://github.com/hackwaly/maitreya/wiki/API-Reference)
 
 ## Todos
 
