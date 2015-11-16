@@ -35,6 +35,17 @@ describe('interpret_test', () => {
     let bindGrammar = defineGrammar(() => {
         def('S', [bind('a', (e1) => 'b')]);
     });
+    let indexGrammar = defineGrammar(() => {
+        def('S', [
+            many(' '),
+            bind([
+                bind([], (_, index) => index),
+                many('a'),
+                bind([], (_, index) => index)
+            ], ([e1, e2, e3]) => ({start: e1, end: e3})),
+            many(' ')
+        ], ([e1, e2, e3]) => e2);
+    });
     let sepByGrammar = defineGrammar(() => {
         def('S', [sepBy('a', ',')]);
     });
@@ -74,6 +85,9 @@ describe('interpret_test', () => {
     });
     it('bind', () => {
         expect(parse(bindGrammar, 'a')).to.deep.equal([['b']]);
+    });
+    it('index', () => {
+        expect(parse(indexGrammar, ' aa ')).to.deep.equal([{start: 1, end: 3}]);
     });
     it('sepBy', () => {
         expect(parse(sepByGrammar, 'a,a,a')).to.deep.equal([[['a', 'a', 'a']]]);

@@ -61,9 +61,9 @@ class BindRule extends Rule {
     constructor(symbol, action) {
         super();
         if (Array.isArray(symbol)) {
-            this.def(symbol, (es) => action(es));
+            this.def(symbol, (es, index) => action(es, index));
         } else {
-            this.def([symbol], ([es]) => action(es));
+            this.def([symbol], ([es], index) => action(es, index));
         }
     }
 }

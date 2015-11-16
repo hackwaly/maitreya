@@ -24,6 +24,7 @@ export class GLRParser extends ParserBase {
         super(grammar, tokenToSymbol);
         this.grammar = grammar;
         let startState = preprocess(grammar);
+        this.index = 0;
         this.stackToResultMap = Map([[Stack([startState]), []]]);
         this.results = [];
         this.errors = [];
@@ -49,7 +50,7 @@ export class GLRParser extends ParserBase {
                 let {symbols, action} = production;
                 let data = symbols.length <= 0 ? [] : result.slice(-symbols.length);
                 if (action !== null) {
-                    data = action(data);
+                    data = action(data, this.index);
                 }
                 if (data instanceof Reject) {
                     errors.push(data);
@@ -103,6 +104,7 @@ export class GLRParser extends ParserBase {
         };
     }
     next(symbol, data) {
+        this.index ++;
         this.results = [];
 
         let stackToResultMap = this.stackToResultMap;
