@@ -88,7 +88,9 @@ export class GLRParser extends ParserBase {
             this.results.push(data[0]);
             return null;
         }
-        newResult.push(data);
+        if (data !== undefined) {
+            newResult.push(data);
+        }
         let newState;
         if (state.shiftMap.has(symbol)) {
             newState = state.shiftMap.get(symbol);

@@ -72,6 +72,21 @@ export function bind(symbol, action) {
     return new BindRule(symbol, action);
 }
 
+class SkipRule extends Rule {
+    constructor(symbol) {
+        super();
+        if (Array.isArray(symbol)) {
+            this.def(symbol, () => undefined);
+        } else {
+            this.def([symbol], () => undefined);
+        }
+    }
+}
+
+export function skip(symbol) {
+    return new SkipRule(symbol);
+}
+
 class PositionRule extends Rule {
     constructor() {
         super();
@@ -109,6 +124,18 @@ class ChoiceRule extends Rule {
 
 export function choice(...symbols) {
     return new ChoiceRule(symbols);
+}
+
+class ManyRule extends Rule {
+    constructor(symbol) {
+        super();
+        this.symbol = symbol;
+        this.def([], () => []);
+        this.def([symbol, this], ([e1, e2]) => [e1, ...e2]);
+    }
+    toString() {
+        return `${this.symbol}*`;
+    }
 }
 
 export function many(symbol) {
@@ -204,16 +231,45 @@ export function regex(regex) {
     return new RegexRule(regex);
 }
 
-class ManyRule extends Rule {
-    constructor(symbol) {
+class StructRule extends Rule {
+    constructor(symbols) {
         super();
-        this.symbol = symbol;
-        this.def([], () => []);
-        this.def([symbol, this], ([e1, e2]) => [e1, ...e2]);
+        this.def(symbols, (es) => {
+            let obj = {};
+            for (let e of es) {
+                if (e instanceof Field) {
+                    obj[e.key] = e.value;
+                }
+            }
+            return obj;
+        });
     }
-    toString() {
-        return `${this.symbol}*`;
+}
+
+export function struct(...symbols) {
+    return new StructRule(symbols);
+}
+
+class Field {
+    constructor(key, value) {
+        this.key = key;
+        this.value = value;
     }
+}
+
+class FieldRule extends Rule {
+    constructor(key, symbol) {
+        super();
+        if (Array.isArray(symbol)) {
+            this.def(symbol, (es) => new Field(key, es));
+        } else {
+            this.def([symbol], ([e1]) => new Field(key, e1));
+        }
+    }
+}
+
+export function field(key, symbol) {
+    return new FieldRule(key, symbol);
 }
 
 //endregion

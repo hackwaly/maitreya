@@ -11,7 +11,9 @@ import {
     sepBy,
     choice,
     string,
-    regex
+    regex,
+    struct,
+    field
 } from '../src/grammar';
 import {
     GLRParser
@@ -63,6 +65,13 @@ describe('interpret_test', () => {
     let regexGrammar = defineGrammar(() => {
         def('S', [regex(/^[a]/)]);
     });
+    let structFieldGrammar = defineGrammar(() => {
+        def('S', [struct(
+            field('a', 'a'),
+            'b',
+            field('c', 'c')
+        )]);
+    });
 
     function parse(grammar, input) {
         let parser = new GLRParser(grammar);
@@ -108,5 +117,8 @@ describe('interpret_test', () => {
     it('regex', () => {
         expect(parse(regexGrammar, 'a')).to.deep.equal([['a']]);
         expect(parse(regexGrammar, 'b')).to.deep.equal([]);
+    });
+    it('struct / field', () => {
+        expect(parse(structFieldGrammar, 'abc')).to.deep.equal([[{a: 'a', c: 'c'}]]);
     });
 });
