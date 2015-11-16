@@ -19,11 +19,21 @@ export function defineGrammar() {
     return grammar;
 }
 
-export function def(id, symbols, action, isGenerated = false) {
+export function def(id, symbols, action = null) {
     let nonterminal = ref(id);
-    let production = new Production(nonterminal, symbols, action);
+    let production;
+    if (Array.isArray(symbols)) {
+        production = new Production(nonterminal, symbols, action);
+    } else {
+        production = new Production(nonterminal, [symbols], ([e1]) => {
+            if (action !== null) {
+                e1 = action(e1);
+            }
+            return e1;
+        });
+    }
     nonterminal.productions.push(production);
-    if (!isGenerated && currentGrammar.start === null) {
+    if (currentGrammar.start === null) {
         currentGrammar.start = nonterminal;
     }
 }

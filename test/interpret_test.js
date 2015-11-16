@@ -66,11 +66,11 @@ describe('interpret_test', () => {
         def('S', [regex(/^[a]/)]);
     });
     let structFieldGrammar = defineGrammar(() => {
-        def('S', [struct(
+        def('S', struct(
             field('a', 'a'),
             'b',
             field('c', 'c')
-        )]);
+        ));
     });
 
     function parse(grammar, input) {
@@ -119,6 +119,6 @@ describe('interpret_test', () => {
         expect(parse(regexGrammar, 'b')).to.deep.equal([]);
     });
     it('struct / field', () => {
-        expect(parse(structFieldGrammar, 'abc')).to.deep.equal([[{a: 'a', c: 'c'}]]);
+        expect(parse(structFieldGrammar, 'abc')).to.deep.equal([{a: 'a', c: 'c'}]);
     });
 });

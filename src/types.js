@@ -35,7 +35,7 @@ export class Grammar {
 }
 
 export class Production {
-    constructor(nonterminal, symbols, action = null) {
+    constructor(nonterminal, symbols, action) {
         this.nonterminal = nonterminal;
         this.symbols = symbols;
         this.action = action;
