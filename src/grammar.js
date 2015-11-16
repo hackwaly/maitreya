@@ -242,10 +242,10 @@ export function regex(regex) {
 }
 
 class StructRule extends Rule {
-    constructor(symbols) {
+    constructor(class_, symbols) {
         super();
         this.def(symbols, (es) => {
-            let obj = {};
+            let obj = new class_();
             for (let e of es) {
                 if (e instanceof Field) {
                     obj[e.key] = e.value;
@@ -256,8 +256,17 @@ class StructRule extends Rule {
     }
 }
 
-export function struct(...symbols) {
-    return new StructRule(symbols);
+export function struct() {
+    let class_;
+    let symbols;
+    if (arguments.length === 1) {
+        class_ = Object;
+        symbols = arguments[0];
+    } else {
+        class_ = arguments[0];
+        symbols = arguments[1];
+    }
+    return new StructRule(class_, symbols);
 }
 
 class Field {
