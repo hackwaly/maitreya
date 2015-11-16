@@ -72,6 +72,17 @@ export function bind(symbol, action) {
     return new BindRule(symbol, action);
 }
 
+class PositionRule extends Rule {
+    constructor() {
+        super();
+        this.def([], (_, index) => index);
+    }
+}
+
+export function position() {
+    return new PositionRule();
+}
+
 class GroupRule extends Rule {
     constructor(symbols) {
         super();

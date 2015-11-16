@@ -7,6 +7,7 @@ import {
     many1,
     optional,
     bind,
+    position,
     sepBy,
     choice,
     string,
@@ -39,9 +40,9 @@ describe('interpret_test', () => {
         def('S', [
             many(' '),
             bind([
-                bind([], (_, index) => index),
+                position(),
                 many('a'),
-                bind([], (_, index) => index)
+                position()
             ], ([e1, e2, e3]) => ({start: e1, end: e3})),
             many(' ')
         ], ([e1, e2, e3]) => e2);
