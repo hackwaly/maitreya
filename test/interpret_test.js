@@ -72,6 +72,11 @@ describe('interpret_test', () => {
             field('c', 'c')
         ]));
     });
+    let indirectLeftRecursive = defineGrammar(() => {
+        def('A', ['a', ref('B'), 'b'], (es) => es.join(''));
+        def('B', ['c', ref('A'), 'd'], (es) => es.join(''));
+        def('B', ['e'], (es) => es.join(''));
+    });
 
     function parse(grammar, input) {
         let parser = new GLRParser(grammar);
@@ -107,9 +112,6 @@ describe('interpret_test', () => {
         expect(parse(choiceGrammar, 'b')).to.deep.equal([['b']]);
         expect(parse(choiceGrammar, 'c')).to.deep.equal([]);
     });
-    it('direct left recursive', () => {
-        expect(parse(directLeftRecursiveGrammar, 'baa')).to.deep.equal([[[['b'], 'a'], 'a']]);
-    });
     it('string', () => {
         expect(parse(stringGrammar, 'foo')).to.deep.equal([['foo']]);
         expect(parse(stringGrammar, 'bar')).to.deep.equal([]);
@@ -120,5 +122,12 @@ describe('interpret_test', () => {
     });
     it('struct / field', () => {
         expect(parse(structFieldGrammar, 'abc')).to.deep.equal([{a: 'a', c: 'c'}]);
+    });
+    it('direct left recursive', () => {
+        expect(parse(directLeftRecursiveGrammar, 'baa')).to.deep.equal([[[['b'], 'a'], 'a']]);
+    });
+    it('indirect left recursive', () => {
+        expect(parse(indirectLeftRecursive, 'aeb')).to.deep.equal(['aeb']);
+        expect(parse(indirectLeftRecursive, 'acaebdb')).to.deep.equal(['acaebdb']);
     });
 });
